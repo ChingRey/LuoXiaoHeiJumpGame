@@ -1,33 +1,62 @@
 #pragma once
 #include <graphics.h>
 
-// 平台类
-class Platform
-{
+enum PlatformType {
+	PLATFORM_NORMAL = 0
+	// Reserved for future expansion:
+	// PLATFORM_MOVING, PLATFORM_BREAKABLE, PLATFORM_BOOST, PLATFORM_SPRING
+};
+
+class Platform {
 public:
-    // 构造函数：创建一个平台
-    // x, y: 平台中心坐标
-    // width, height: 平台宽高
-    // speed: 下落速度
-    Platform(double x, double y, double width, double height, double speed);
+	int x, y;
+	int width, height;
+	PlatformType type;
+	bool scored;       // Already scored this landing? (prevents double-counting)
 
-    // 更新平台位置（向下移动）
-    void Update();
+	Platform() : x(0), y(0), width(60), height(12), type(PLATFORM_NORMAL), scored(false) {}
 
-    // 绘制平台：深棕色矩形（后期替换为森林树干/石板纹理）
-    void Draw();
+	Platform(int x_, int y_, int w_, int h_, PlatformType t = PLATFORM_NORMAL)
+		: x(x_), y(y_), width(w_), height(h_), type(t), scored(false) {}
 
-    // 检查平台是否超出屏幕底部（应删除）
-    bool IsOutOfScreen(int screenHeight);
+	// Draw platform relative to camera
+	void Draw(int cameraTop) const {
+		int screenY = y - cameraTop;
+		if (screenY < -20 || screenY > 700) return;
 
-    // 获取平台属性
-    double GetX() const { return m_x; }
-    double GetY() const { return m_y; }
-    double GetWidth() const { return m_width; }
-    double GetHeight() const { return m_height; }
+		// Drop shadow
+		setfillcolor(RGB(55, 110, 55));
+		solidrectangle(x + 2, screenY + 2, x + width + 2, screenY + height + 2);
 
-private:
-    double m_x, m_y;          // 平台中心坐标
-    double m_width, m_height; // 平台宽高
-    double m_speed;           // 下落速度
+		// Main body
+		setfillcolor(RGB(95, 175, 95));
+		setlinecolor(RGB(65, 145, 65));
+		fillrectangle(x, screenY, x + width, screenY + height);
+
+		// Top highlight for slight 3D effect
+		setfillcolor(RGB(135, 205, 135));
+		solidrectangle(x + 2, screenY + 1, x + width - 2, screenY + 3);
+	}
+
+	// Check if player lands on this platform this frame.
+	// playerVy must be positive (falling) and the player's foot must
+	// have crossed the platform top from above.
+	bool CheckLanding(int playerX, int playerY, int playerRadius, int playerVy) const {
+		if (playerVy <= 0) return false;
+		if (scored) return false;
+
+		int footY     = playerY + playerRadius;
+		int prevFootY = footY - playerVy;
+		int left      = playerX - playerRadius;
+		int right     = playerX + playerRadius;
+
+		// Foot crossed platform surface from above
+		if (footY >= y && prevFootY <= y + 8) {
+			// Horizontal overlap (with small margin so edges count)
+			if (right > x + 5 && left < x + width - 5) {
+				return true;
+			}
+		}
+		return false;
+	}
 };

@@ -1,0 +1,28 @@
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.sln.docstates
+
+# Build outputs
+Debug/
+x64/
+lxhh/Debug/
+lxhh/x64/
+*.exe
+*.pdb
+*.ilk
+*.obj
+*.log
+*.tlog
+*.recipe
+*.idb
+*.ipch
+*.db
+
+# Large archives
+*.zip
+
+# OS files
+Thumbs.db
+Desktop.ini
